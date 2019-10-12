@@ -21,25 +21,6 @@ server.listen(5) #queue of up to 5 connections
 #list of sockets I expect to read from
 inputs = [server] 
 
-def retrieveData(cliConnection):
-	try:
-		header = cliConnection.recv(HEADER_SIZE)
-		if not len(header):
-			return False
-
-		msgSize = int(header.decode('utf-8'))
-		data = cliConnection.recv(msgSize)
-
-		return {
-		'header': header,
-		'data': data
-		}
-	except:
-		# the branch handles forced closed connections by the client
-		# for example losing a connection or socket.close()
-		return False
-
-
 while inputs:
 	readable, writable, exceptional = select.select(inputs, inputs, inputs)
 
@@ -48,25 +29,15 @@ while inputs:
 			# this branch handles connection requests
 			print("received a connection request from a client")
 			clientConnection, clientAddress = server.accept()
-			print ("successfully connection to" + str(clientConnection))
-
-			# retrieve client data
-			cliData = retrieveData(clientConnection)
-
-			# save users info
-			clients[clientConnection] = cliData
+			print ("successful connection to " + str(clientConnection))
 
 			# append to running list of sockets
+			clientConnection.setblocking(0)
 			inputs.append(clientConnection) 
-			clientConnection.setBlocking(0)
 
 		else: 
-			# this branch handles existing sockets sending data
-			msg = retrieveData(socket)
+			# this branch handles existing sockets sending data (data from clients)
+			data = socket.recv(1024)
 			print("existing socket sending data. Sent from: " + str(socket))
-
-			cliData = clients[socket]
-
-			print("message was: " + cliData['header'] + cliData['data'] + msg['header'] + msg['data'])
-
-conn.close()
+			print("existing socket sent data, the data was: " + str(data))
+			socket.send(bytes("recieved data", 'utf-8'))

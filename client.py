@@ -1,25 +1,23 @@
-import select, socket, sys;
-# Echo client program
+import select, socket, errno;
+import time
+
 count = 0
-HOST = socket.gethostname()    # The remote host
-PORT = 5000                    # The same port as used by the server
+HEADER_SIZE = 10   # used for variable message size 
+PORT = 5000        # arbitrary non-privileged port
+HOST = "127.0.0.1" # retreives host of machine this code is run on
 
 #establish socket and connection to the IP
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((HOST, PORT))
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client.connect((HOST, PORT))
 
-message = s.recv(1024)
-print(message.decode("utf-8"))
+inputs = [client]
+
+while 1:
+	command_string = input("enter command > ")
+	count = count + 1
+	msgToSend = command_string
+	client.sendall(msgToSend.encode('utf-8'))
+	data = client.recv(1024)
+	print ("received " + str(data))
 
 
-# inputs = [s, sys.stdin]
-# command_string = raw_input("enter string for me to keep echoing to server -> ")
-# while 1:    
-# 	count = count+1    
-# 	msgToSend = command_string    
-# 	s.sendall(msgToSend)    
-# 	data = s.recv(1024)    
-# 	print 'Received', repr(data)    
-# 	time.sleep(5)
-
-s.close()
