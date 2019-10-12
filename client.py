@@ -19,5 +19,3 @@ while 1:
 	client.sendall(msgToSend.encode('utf-8'))
 	data = client.recv(1024)
 	print ("received " + str(data))
-
-
