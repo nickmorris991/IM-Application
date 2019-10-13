@@ -2,7 +2,7 @@ import select, socket, errno;
 import time
 
 PORT = 5000        # arbitrary non-privileged port
-HOST = "127.0.0.1" # retreives host of machine this code is run on
+HOST = "164.107.113.68" # retreives host of machine this code is run on
 
 #establish socket and connection to the IP
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
