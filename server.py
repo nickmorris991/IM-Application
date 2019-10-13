@@ -141,7 +141,6 @@ def processCommand(messageArray, client):
 			expected format: "login <username> <password>"
 			"""
 			properStructure = checkArguments("login", messageArray, client)
-
 			if (properStructure):
 				# associate user address with their username.
 				username = messageArray[1].decode('utf-8')
@@ -160,12 +159,12 @@ def processCommand(messageArray, client):
 			properStructure = checkArguments("listusers", messageArray, client)
 			if (properStructure):
 				i = 0
-				outputString = ""
+				userList = ""
 				while (i < len(onlineList)):
-					outputString += onlineList[i]
-					outputString += "\n"
+					userList += onlineList[i]
+					userList += "\n"
 					i+=1
-				client.send(bytes(outputString, "utf-8"))
+				client.send(bytes(userList, "utf-8"))
 
 def main():
 	# running number of active connections
@@ -203,7 +202,7 @@ def main():
 				clientConnection.setblocking(0)
 				inputs.append(clientConnection) 
 			else: 
-				# this branch handles existing sockets sending data (sent from clients)
+				# this branch handles existing socket data (sent from clients)
 				data = getData(s)
 
 				# check for forced closed connections and handle/cleanup appropriately
