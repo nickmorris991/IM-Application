@@ -6,3 +6,12 @@ password2
 
 test3
 password3
+
+nick
+morris
+
+testing
+cool
+
+test4
+password4

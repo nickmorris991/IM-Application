@@ -3,14 +3,13 @@ import socket, select, sys;
 PORT = 5000            # arbitrary non-privileged port
 HOST = "127.0.0.1"     # retreives host of machine this code is run on
 
+acceptedCommands = ["register", "login", "logout", "sendmsg", "listusers"]
+
 onlineList = []        # list of online users (defined as users who have logged in)
 inputs = []            # list of sockets
 connectedSockets = {}  # dict to save socket info (key=cliSocket, value=IP)
 usernamePassword = {}  # dict for password validation (key=username, value=password)
-usernameAddress = {}   # dict for sending messages (key=username, value=address)
-
-acceptedCommands = ["register", "login", "logout", "sendmsg", "listusers"]
-
+addressUsername = {}   # dict for sending messages (key=address, value=username)
 
 def getRegisteredUsers():
 	# if the file exists open it and read the names if not return empty list
@@ -25,9 +24,20 @@ def getRegisteredUsers():
 		while (i+1 < len(names)):
 			users[names[i]] = names[i+1]
 			i+=2
+		f.close()
 		return users
 	except:
 		return users
+
+def addUserToFile(username, password):
+	#write the user to our file, if the file doesn't exist create it 
+	f = open("regUsernames.txt", "a+")
+	f.write('\n')
+	f.write(username)
+	f.write('\n')
+	f.write(password)
+	f.write('\n')
+	f.close()
 
 def getData(cliSocket):
 	try:
@@ -43,22 +53,63 @@ def getData(cliSocket):
 def checkArguments(commandName, messageArray, client):
 
 	if (commandName == "register"):
+		# check length
 		if (len(messageArray) != 3):
 			client.send(bytes("ERROR 201: Incorrect number of arguments", "utf-8"))
-		elif (messageArray[0].decode('utf-8') not in usernamePassword):
-			pass
+			return False
+		# check unique username
+		elif (messageArray[1].decode('utf-8') in usernamePassword.keys()):
+			client.send(bytes("ERROR 202: Username taken", "utf-8"))
+			return False
+		else: 
+			return True
+
 	elif (commandName == "login"):
-		pass
+		# if the client issuing the 'login' command is already logged in return error 
+		if (connectedSockets[client] in addressUsername):
+			client.send(bytes("ERROR 208: logout before logging in again", "utf-8"))
+			return False
+		# check length
+		if (len(messageArray) != 3):
+			client.send(bytes("ERROR 201: Incorrect number of arguments", "utf-8"))
+			return False
+		# check password and username errors
+		givenUsername = messageArray[1].decode('utf-8')
+		givenPassword = messageArray[2].decode('utf-8')
+		if (givenUsername not in usernamePassword.keys()):
+			client.send(bytes("ERROR 203: Unregistered username","utf-8"))
+			return False
+		elif(usernamePassword[givenUsername] != givenPassword):
+			client.send(bytes("ERROR 204: Incorrect password","utf-8"))
+			return False
+		elif(givenUsername in onlineList):
+			client.send(bytes("ERROR 207: user already signed in","utf-8"))
+			return False
+		else:
+			return True
+
 	elif (commandName == "logout"):
 		pass
 	elif (commandName == "sendmsg"):
 		pass
 	elif (commandName == "listusers"):
-		pass
+		#check length 
+		if (len(messageArray) != 1):
+			client.send(bytes("ERROR 205: Incorrect number of arguments", "utf-8"))
+			return False
+
+		address = connectedSockets[client]
+		if (address not in addressUsername):
+			client.send(bytes("ERROR 206: must be online to issue command", "utf-8"))
+			return False
+		else: 
+			return True
 
 def processCommand(messageArray, client):
-
+	# command to be processed
 	command = messageArray[0].decode('utf-8')
+
+	# get the userAddress so I know who sent the command
 	userAddress = connectedSockets[client]
 
 	if (command not in acceptedCommands):
@@ -66,19 +117,38 @@ def processCommand(messageArray, client):
 		client.send(bytes("ERROR 200: Received unaccepted command.","utf-8"))
 	else: 
 		if (command == "register"):
-			# expected format: "register <username> <password>"
-			checkArguments("register", messageArray, client)
+			"""
+			here we check format of arguments for followed protocal.
+			extract the username and password and save it to our structures (file, in app)
+
+			expected format: "register <username> <password>"
+			"""
+			properStructure = checkArguments("register", messageArray, client)
+			if (properStructure):
+				username = messageArray[1].decode('utf-8')
+				password = messageArray[2].decode('utf-8')
+				# save the user to our database (file) and add to the in app datastructure
+				addUserToFile(username, password)
+				usernamePassword[username] = password
+				client.send(bytes("registered successfully", "utf-8"))
 
 		elif (command == "login"):
 			"""
 			when a user logs in we save their username with the address they login from.
 			Thus, user's aren't tightly coupled with their address and can login from any machine.
-			"""
-			checkArguments("login", messageArray, client)
+			We also need to check they are logging in with the correct password
 
-			# associate user address with their username.
-			username = messageArray[1].decode('utf-8')
-			usernameAddress[username] = userAddress
+			expected format: "login <username> <password>"
+			"""
+			properStructure = checkArguments("login", messageArray, client)
+
+			if (properStructure):
+				# associate user address with their username.
+				username = messageArray[1].decode('utf-8')
+				addressUsername[userAddress] = username
+				# add them to the list of online users
+				onlineList.append(username)
+				client.send(bytes("login successful", "utf-8"))
 
 		elif (command == "logout"):
 			checkArguments("logout", messageArray, client)
@@ -87,7 +157,15 @@ def processCommand(messageArray, client):
 			checkArguments("sendmsg", messageArray, client)
 
 		elif (command == "listusers"):
-			checkArguments("listusers", messageArray, client)
+			properStructure = checkArguments("listusers", messageArray, client)
+			if (properStructure):
+				i = 0
+				outputString = ""
+				while (i < len(onlineList)):
+					outputString += onlineList[i]
+					outputString += "\n"
+					i+=1
+				client.send(bytes(outputString, "utf-8"))
 
 def main():
 	# running number of active connections
@@ -104,9 +182,6 @@ def main():
 	# list of sockets I expect to read from
 	inputs.append(server)
 
-	# get registered users (name, password) from saved file
-	usernamePassword = getRegisteredUsers()
-
 	#manage input (clients) while server is running
 	while inputs:
 		readable, writable, exceptional = select.select(inputs, inputs, inputs)
@@ -117,7 +192,6 @@ def main():
 				print("received a connection request from a client.")
 				clientConnection, clientAddress = server.accept()
 				print ("successful connection to: " + str(clientAddress))
-				print ("client socket is: " + str(clientConnection))
 
 				# account for active connection
 				connections += 1
@@ -132,9 +206,14 @@ def main():
 				# this branch handles existing sockets sending data (sent from clients)
 				data = getData(s)
 
+				# check for forced closed connections and handle/cleanup appropriately
 				if data is False:
 					print("Closed connection from: " + str(connectedSockets[s]))
 					inputs.remove(s)
+					username = addressUsername[connectedSockets[s]]
+					if (username in onlineList):
+						onlineList.remove(addressUsername[connectedSockets[s]])
+						del addressUsername[connectedSockets[s]]
 					del connectedSockets[s]
 					continue
 
@@ -143,4 +222,5 @@ def main():
 				processCommand(messageArray, s)
 
 if __name__ == '__main__':
+	usernamePassword = getRegisteredUsers()
 	main()
