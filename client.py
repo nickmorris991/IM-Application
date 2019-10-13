@@ -1,7 +1,7 @@
 import select, socket, errno;
 import time
 
-PORT = 5000        # arbitrary non-privileged port
+PORT = 5001             # arbitrary non-privileged port
 HOST = "164.107.113.68" # retreives host of machine this code is run on
 
 #establish socket and connection to the IP
