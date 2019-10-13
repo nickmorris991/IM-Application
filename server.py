@@ -89,7 +89,11 @@ def checkArguments(commandName, messageArray, client):
 			return True
 
 	elif (commandName == "logout"):
-		pass
+		if (connectedSockets[client] not in addressUsername):
+			client.send(bytes("ERROR 209: not logged in", "utf-8"))
+			return False
+		else: 
+			return True
 	elif (commandName == "sendmsg"):
 		pass
 	elif (commandName == "listusers"):
@@ -123,13 +127,14 @@ def processCommand(messageArray, client):
 
 			expected format: "register <username> <password>"
 			"""
-			properStructure = checkArguments("register", messageArray, client)
-			if (properStructure):
+			properArgStructure = checkArguments("register", messageArray, client)
+			if (properArgStructure):
 				username = messageArray[1].decode('utf-8')
 				password = messageArray[2].decode('utf-8')
 				# save the user to our database (file) and add to the in app datastructure
 				addUserToFile(username, password)
 				usernamePassword[username] = password
+				#notify client
 				client.send(bytes("registered successfully", "utf-8"))
 
 		elif (command == "login"):
@@ -140,36 +145,43 @@ def processCommand(messageArray, client):
 
 			expected format: "login <username> <password>"
 			"""
-			properStructure = checkArguments("login", messageArray, client)
-			if (properStructure):
+			properArgStructure = checkArguments("login", messageArray, client)
+			if (properArgStructure):
 				# associate user address with their username.
 				username = messageArray[1].decode('utf-8')
 				addressUsername[userAddress] = username
 				# add them to the list of online users
 				onlineList.append(username)
+				#notify client
 				client.send(bytes("login successful", "utf-8"))
 
 		elif (command == "logout"):
-			checkArguments("logout", messageArray, client)
+			properArgStructure = checkArguments("logout", messageArray, client)
+			if (properArgStructure):
+				callerAddress = connectedSockets[client]
+				callerUsername = addressUsername[callerAddress]
+				#cleanup user
+				onlineList.remove(callerUsername)
+				del addressUsername[callerAddress]
+				#notify client
+				client.send(bytes("successfully logged out", "utf-8"))
 
 		elif (command == "sendmsg"):
 			checkArguments("sendmsg", messageArray, client)
 
 		elif (command == "listusers"):
-			properStructure = checkArguments("listusers", messageArray, client)
-			if (properStructure):
+			properArgStructure = checkArguments("listusers", messageArray, client)
+			if (properArgStructure):
 				i = 0
 				userList = ""
 				while (i < len(onlineList)):
 					userList += onlineList[i]
 					userList += "\n"
 					i+=1
+				#respond to client
 				client.send(bytes(userList, "utf-8"))
 
 def main():
-	# running number of active connections
-	connections = 0    
-
 	# create tcp/ip socket
 	server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	server.setblocking(0)
@@ -192,9 +204,6 @@ def main():
 				clientConnection, clientAddress = server.accept()
 				print ("successful connection to: " + str(clientAddress))
 
-				# account for active connection
-				connections += 1
-
 				# save account info
 				connectedSockets[clientConnection] = clientAddress
 
@@ -209,8 +218,9 @@ def main():
 				if data is False:
 					print("Closed connection from: " + str(connectedSockets[s]))
 					inputs.remove(s)
-					username = addressUsername[connectedSockets[s]]
-					if (username in onlineList):
+					address = connectedSockets[s]
+					if (address in addressUsername):
+						#if they are logged in when they force closed connection
 						onlineList.remove(addressUsername[connectedSockets[s]])
 						del addressUsername[connectedSockets[s]]
 					del connectedSockets[s]
