@@ -1,7 +1,8 @@
 import socket, select, sys;
 
 PORT = 5001            # arbitrary non-privileged port
-HOST = ''              # retreives host of machine this code is run on
+#HOST = ''              # retreives host of machine this code is run on
+HOST = "127.0.0.1"
 
 acceptedCommands = ["register", "login", "logout", "sendmsg", "listusers"]
 
@@ -16,7 +17,7 @@ def getRegisteredUsers():
 	users = {}
 
 	try:
-		f = open("regUsernames.txt", "r")
+		f = open("users.txt", "r")
 		names = f.read()
 		names = names.split()
 		# loop over names and add them to the list
@@ -31,7 +32,7 @@ def getRegisteredUsers():
 
 def addUserToFile(username, password):
 	#write the user to our file, if the file doesn't exist create it 
-	f = open("regUsernames.txt", "a+")
+	f = open("users.txt", "a+")
 	f.write('\n')
 	f.write(username)
 	f.write('\n')
@@ -49,6 +50,18 @@ def getData(cliSocket):
 		return message
 	except:
 		return False
+
+def getAddress(sendingUsername):
+	#iterate over logged in users (addressUsername) and return matching address
+	for address, username in addressUsername.items():
+		if (username == sendingUsername):
+			return address
+
+def getSocket(sendingAddress):
+	#iterate over connectedSockets and return the socket associated with "sendingAddress"
+	for socket, address in connectedSockets.items():
+		if (address == sendingAddress):
+			return socket
 
 def checkArguments(commandName, messageArray, client):
 
@@ -95,7 +108,28 @@ def checkArguments(commandName, messageArray, client):
 		else: 
 			return True
 	elif (commandName == "sendmsg"):
-		pass
+		#check length
+		if (len(messageArray) < 3):
+			client.send(bytes("ERROR 201: Incorrect number of arguments", "utf-8"))
+			return False
+		givenUsername = messageArray[1].decode('utf-8')
+		clientAddress = connectedSockets[client]
+		clientUsername = addressUsername[clientAddress]
+
+		if (clientAddress not in addressUsername):
+			client.send(bytes("ERROR 206: must be logged in to issue command", "utf-8"))
+			return False
+		elif (givenUsername not in usernamePassword):
+			client.send(bytes("ERROR 203: Unregistered username","utf-8"))
+			return False
+		elif (givenUsername not in onlineList):
+			client.send(bytes("ERROR 211: user isn't online", "utf-8"))
+			return False
+		elif (givenUsername == clientUsername):
+			client.send(bytes("ERROR 212: self sent message", "utf-8"))
+			return False
+		else:
+			return True
 	elif (commandName == "listusers"):
 		#check length 
 		if (len(messageArray) != 1):
@@ -167,7 +201,33 @@ def processCommand(messageArray, client):
 				client.send(bytes("successfully logged out", "utf-8"))
 
 		elif (command == "sendmsg"):
-			checkArguments("sendmsg", messageArray, client)
+			properArgStructure = checkArguments("sendmsg", messageArray, client)
+			if (properArgStructure):
+				"""
+				Steps:
+				1) get sender's username  2) get sending address 3) build output 
+				4) send message using the client socket associated with sending address
+				
+				output = "<sent from> <msg>"
+				"""
+				#get sender's username
+				senderAddress = connectedSockets[client]
+				senderUsername = addressUsername[senderAddress]
+
+				#get sending address
+				sendingUsername = messageArray[1].decode('utf-8')
+				sendingAddress = getAddress(sendingUsername)
+
+				#build output
+				i = 2
+				output = str(senderUsername) + " > "
+				while (i < len(messageArray)):
+					output += messageArray[i].decode('utf-8') + " "
+					i+=1
+
+				#get sending socket and send message
+				sendingSocket = getSocket(sendingAddress)
+				sendingSocket.send(bytes(output, "utf-8"))
 
 		elif (command == "listusers"):
 			properArgStructure = checkArguments("listusers", messageArray, client)
