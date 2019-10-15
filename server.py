@@ -168,7 +168,8 @@ def processCommand(messageArray, client):
 				# save the user to our database (file) and add to the in app datastructure
 				addUserToFile(username, password)
 				usernamePassword[username] = password
-				#notify client
+				#notify client/server
+				print("registered new user: " + str(username))
 				client.send(bytes("registered successfully", "utf-8"))
 
 		elif (command == "login"):
@@ -186,7 +187,8 @@ def processCommand(messageArray, client):
 				addressUsername[userAddress] = username
 				# add them to the list of online users
 				onlineList.append(username)
-				#notify client
+				#notify client/server
+				print("successfully logged in user: " + str(username))
 				client.send(bytes("login successful", "utf-8"))
 
 		elif (command == "logout"):
@@ -197,7 +199,8 @@ def processCommand(messageArray, client):
 				#cleanup user
 				onlineList.remove(callerUsername)
 				del addressUsername[callerAddress]
-				#notify client
+				#notify client/server
+				print("successfully logged out user: " + str(callerUsername))
 				client.send(bytes("successfully logged out", "utf-8"))
 
 		elif (command == "sendmsg"):
@@ -225,6 +228,8 @@ def processCommand(messageArray, client):
 					output += messageArray[i].decode('utf-8') + " "
 					i+=1
 
+				#notify server
+				print("sent a message to: " + str(sendingUsername) + " from: " + str(senderUsername))
 				#get sending socket and send message
 				sendingSocket = getSocket(sendingAddress)
 				sendingSocket.send(bytes(output, "utf-8"))
@@ -239,9 +244,11 @@ def processCommand(messageArray, client):
 					userList += onlineList[i]
 					userList += "\n"
 					i+=1
+				#notify server
+				print("Issued 'listusers' command")
 				#respond to client
 				client.send(bytes(userList, "utf-8"))
-				
+
 def main():
 	# create tcp/ip socket
 	server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

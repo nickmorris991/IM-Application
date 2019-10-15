@@ -2,28 +2,36 @@ import select, socket, sys, time, threading;
 import os;
 from os import path;
 
-PORT = 5001              # arbitrary non-privileged port
-#HOST = "164.107.113.68" # retreives host of machine this code is run on
-HOST = ""                # defined by user so that we aren't hard coding server IP's (flexibility)
-clientName = None
+#get the name for the client output display
+clientName = ""
+
+#define port and host for connection
+PORT = 5001
+HOST = input("Enter server host IP: ")
 
 #establish socket and connection to the IP
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect((HOST, PORT))
 client.setblocking(1)
 
+
 def getSetupClientInfo(): 
+	cliName = ""
+
 	#get display name for this client
-	clientName = input("Enter name for display file (e.g. client1Output.html), DONT USE NAME \"client\": ")
+	while (cliName == "" or cliName == "client.html" or cliName == "client.py" or cliName == "client"):
+		cliName = input("Enter name for display file (e.g. client1Output.html), DONT USE NAME \"client\": ")
+
 	print()
 	print("use the console/terminal for input and the file just created to view output")
 	print("it will update in real time, no need to refresh")
 	print()
-
-	#get host address for this client
-	HOST = input("Enter the IP of the machine you'd like to use as the IM server: ")
-	print("All setup! Ready to send some messages! ")
+	print("Ready to send messages! Have fun!")
+	print("note: See the documentation for how to enter commands")
 	print()
+
+	return cliName
+
 
 def createHTMLTemplate(file):
 	file.write("<!DOCTYPE html>\n")
@@ -75,6 +83,7 @@ def main():
 	described in the provided template files. So I went with a multi threaded
 	approach client side. It's fairly similar"""
 
+	#open and create a display for the client
 	if (path.exists(clientName) and clientName != "client" and clientName != "client.py"):
 		os.remove(clientName) #if the file is already in OS, start fresh
 
@@ -82,8 +91,10 @@ def main():
 	createHTMLTemplate(f)
 	f.close()
 
+	#initialize and start the thread for receiving messages
 	threading.Thread(target=recvThread).start()
 
+	#loop to ask for input and send the data to the IM server
 	while True:
 		# get command
 		command_string = getInput()
@@ -95,5 +106,5 @@ def main():
 		client.send(bytes(command_string,"utf-8"))
 
 if __name__ == '__main__': 
-	getSetupClientInfo()
+	clientName = getSetupClientInfo()
 	main()
