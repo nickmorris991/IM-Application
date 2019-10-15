@@ -1,0 +1,14 @@
+Overall Project Design:
+
+client.py:
+On the client side, in order to send and receive messages at the same time, I'm using multiple threads. I tried to use the paradigm described in some of the python files on Carmen (which is what I used server side) but I couldn't get that to work properly. The design I have now is logically similar though. 
+
+When I send messages server side from a running client, the protocol I've designed starts with an integer representing the message size followed by some buffer space (blank space) and the incoming message. I do this so that I can read in the integer first and scale the recv buffer on the server side according to how big the incoming message is. This way I don't lose any information if, for instance, the message exceeds some predetermined value I've hardcoded into the recv buffer server side. 
+
+I've also designed the client so that upon launch it asks for a .html file to create as the display. The client takes in that name, creates a .html file (or resets an existing one if the provided name already exists), and outputs everything it receives from the server (and a couple client side messages) to this .html display. Because of this, the workflow for using the application includes having this file open in a browser to view the display and a terminal window open to input commands. I designed it this way so that if I received a message while the client was entering a command, or while the client was being prompted for a command I could display it to the user without printing it on top of the command prompt or the command the user is in the middle of writing. 
+
+
+
+
+
+server.py:

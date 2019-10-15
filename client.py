@@ -142,8 +142,7 @@ def main():
 		if ("sendmsg" == command_string[0:7]):
 			messageList = command_string.split()
 			outputSendMsg(messageList)
-
-
+			
 		"""
 		construct message data to send to IM server. 
 		Data sent to server has the following format:
@@ -159,3 +158,6 @@ def main():
 if __name__ == '__main__': 
 	clientName = getSetupClientInfo()
 	main()
+
+
+

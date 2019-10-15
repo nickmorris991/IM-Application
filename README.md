@@ -49,7 +49,7 @@ using the application:
 
 
 
-VALID COMMANDS:
+VALID COMMANDS (PROTOCOL):
 note: I defined things so that whitespace doesn't matter to the user. so "logout" and "logout   " are the same command. 
 note: I define "logged in" and "online" to mean the same thing. This made logical sense to me because if you think about a normal messaging application a user isn't listed as "active" or "online" unless they are also "logged in".
 
