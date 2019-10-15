@@ -102,7 +102,6 @@ def main():
 			messageList = command_string.split()
 			outputSendMsg(messageList)
 
-		if ("")
 
 		# send command
 		client.send(bytes(command_string,"utf-8"))
