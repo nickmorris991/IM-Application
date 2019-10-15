@@ -74,9 +74,13 @@ def outputSendMsg(messageList):
 
 def recvThread():
 	while True:
-		data = client.recv(1024)
-		if not data: sys.exit(0)
-		outputToHTMLDisplay(data.decode('utf-8'))
+		try:
+			data = client.recv(1024)
+			if not data: sys.exit(0)
+			outputToHTMLDisplay(data.decode('utf-8'))
+		except:
+			#we've executed "leave"
+			sys.exit(0)
 
 def main():
 	"""the approach I used server side didn't work with stdinput like it's
@@ -102,6 +106,10 @@ def main():
 			messageList = command_string.split()
 			outputSendMsg(messageList)
 
+		if ("leave" == command_string):
+			print("exiting IM application")
+			client.close()
+			sys.exit(0)
 
 		# send command
 		client.send(bytes(command_string,"utf-8"))
