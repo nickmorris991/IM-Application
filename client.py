@@ -98,9 +98,11 @@ def main():
 	while True:
 		# get command
 		command_string = getInput()
-		if ("sendmsg" in command_string):
+		if ("sendmsg" == command_string[0:7]):
 			messageList = command_string.split()
 			outputSendMsg(messageList)
+
+		if ("")
 
 		# send command
 		client.send(bytes(command_string,"utf-8"))
