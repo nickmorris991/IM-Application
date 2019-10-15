@@ -1,8 +1,8 @@
 import socket, select, sys;
 
 PORT = 5001            # arbitrary non-privileged port
-#HOST = ''              # retreives host of machine this code is run on
-HOST = "127.0.0.1"
+HOST = ''              # retreives host of machine this code is run on
+#HOST = "127.0.0.1"
 
 acceptedCommands = ["register", "login", "logout", "sendmsg", "listusers"]
 
