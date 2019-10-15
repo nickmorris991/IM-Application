@@ -143,10 +143,6 @@ def main():
 			messageList = command_string.split()
 			outputSendMsg(messageList)
 
-		if ("leave" == command_string):
-			print("exiting IM application")
-			client.close()
-			sys.exit(0)
 
 		"""
 		construct message data to send to IM server. 

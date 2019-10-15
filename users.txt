@@ -10,3 +10,6 @@ ogle
 
 cool
 man
+
+george
+clooney
