@@ -1,7 +1,7 @@
 Overall Project Design:
 
 client.py:
-On the client side, in order to send and receive messages at the same time, I'm using multiple threads. I tried to use the paradigm described in some of the python files on Carmen (which is what I used server side) but I couldn't get that to work properly. The design I have now is logically similar though. 
+On the client side, in order to send and receive messages at the same time, I'm using multiple threads. I tried to use the paradigm described in some of the python files on Carmen (which is what I used server side) but I couldn't get that to work properly. The design I have now is logically similar though. One additional thing to note is the client.py script requires an IP input from user which represents the IP of the machine running the server code. 
 
 When I send messages server side from a running client, the protocol I've designed starts with an integer representing the message size followed by some buffer space (blank space) and the incoming message. I do this so that I can read in the integer first and scale the recv buffer on the server side according to how big the incoming message is. This way I don't lose any information if, for instance, the message exceeds some predetermined value I've hardcoded into the recv buffer server side. 
 
@@ -9,6 +9,9 @@ I've also designed the client so that upon launch it asks for a .html file to cr
 
 
 
-
-
 server.py:
+On the server side one of the biggest problems was finding an efficient way to store all of the information I needed about the clients. I store information mostly in a series of dictionaries that have keys that lead to one another. The key's of the dictionaries chain together in the following way: socket -> address -> username -> password. This allowed me to access every "important" parameter about a client virtually anywhere in the code once the client had provided it in a command. 
+
+I start the server by retreiving all of the users in the database file entitled "users.txt" (if the file exists at runtime). If the file doesn't exist I create it when the first user is registered to the system. After this I create the server socket and iterate over connection (input) requests using the select.select(...) paradigm discussed in the python files on Carmen. This breaks things down into initial connections and data sent to the server. Upon initial connection I save the user's address so that when the socket receives data later I know who it came from. The receiving structure was described above, using the message size sent in a header of sorts which is used to scale the recv buffer according to expected message length. 
+
+Next, after receiving the client sent data, I break the logic up into two sections, processing the command (processCommand function) and checking for the validity (syntax and semantics) of that command (checkArguments function). There are other helper methods but these two represent the core logic the server performs. Hopefully, that section of the code is well written and documented enough for the reader to understand it on its own. Upon proper processing, the server notifies the client of the result of the command (successful or not, what's the result, etc) and logs the information in it's own output stream (which is a debugging feature). 
