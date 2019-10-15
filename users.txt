@@ -1,29 +1,12 @@
+
+nick
+morris
+
 test
 password
 
-test2
-password2
+dave
+ogle
 
-test3
-password3
-
-nick
-morris
-
-testing
 cool
-
-test4
-password4
-
-dave
-ogle
-
-caleb
-fish
-
-morris
-nick
-
-ogle
-dave
+man

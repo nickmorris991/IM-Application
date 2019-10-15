@@ -1,8 +1,9 @@
 import socket, select, sys;
 
+BUFFERSIZE = 5         # used to receive length of each message and scale recv buffer size based on message length
+
 PORT = 5001            # arbitrary non-privileged port
 HOST = ''              # retreives host of machine this code is run on
-#HOST = "127.0.0.1"
 
 acceptedCommands = ["register", "login", "logout", "sendmsg", "listusers"]
 
@@ -12,26 +13,32 @@ connectedSockets = {}  # dict to save socket info (key=cliSocket, value=IP)
 usernamePassword = {}  # dict for password validation (key=username, value=password)
 addressUsername = {}   # dict for sending messages (key=address, value=username)
 
-def getRegisteredUsers():
-	# if the file exists open it and read the names if not return empty list
-	users = {}
+"""
+linked chain of connected keys represented by the three dictionaries above: 
+socket -> address -> username -> password 
+"""
 
+def getRegisteredUsers():
+	# if the file exists open it and read the names. If not return an empty list
+	users = {}
 	try:
 		f = open("users.txt", "r")
 		names = f.read()
 		names = names.split()
+
 		# loop over names and add them to the list
 		i = 0
 		while (i+1 < len(names)):
 			users[names[i]] = names[i+1]
 			i+=2
+
 		f.close()
 		return users
 	except:
 		return users
 
 def addUserToFile(username, password):
-	#write the user to our file, if the file doesn't exist create it 
+	#write the user to our file/database, if the file doesn't exist create it 
 	f = open("users.txt", "a+")
 	f.write('\n')
 	f.write(username)
@@ -41,13 +48,20 @@ def addUserToFile(username, password):
 	f.close()
 
 def getData(cliSocket):
+	"""
+	APPROACH: recv a predetermined length (buffersize) that contains an 
+	integer value representing the length of the incoming message.
+	Use this integer value to variable the buffer size of the message
+	so that we don't run into problems if a mesage exceeds a fixed length
+	we decide in advance. 
+	"""
 	try:
-		message = cliSocket.recv(1024)
-
-		if not len(message):
+		msgSize = cliSocket.recv(BUFFERSIZE)
+		msg = cliSocket.recv(int(msgSize)+10)
+		if not len(msg):
+			#if the client forces disconnection
 			return False
-
-		return message
+		return msg
 	except:
 		return False
 
@@ -64,7 +78,12 @@ def getSocket(sendingAddress):
 			return socket
 
 def checkArguments(commandName, messageArray, client):
-
+	"""
+	This function is used to pass errors back to the client if he/she
+	incorrectly issued a command. Becasue we strip away whitespace before
+	error checking, whitespace isn't taken into account. For a full list of 
+	possible errors see the attached documentation. 
+	"""
 	if (commandName == "register"):
 		# check length
 		if (len(messageArray) != 3):
@@ -74,8 +93,8 @@ def checkArguments(commandName, messageArray, client):
 		elif (messageArray[1].decode('utf-8') in usernamePassword.keys()):
 			client.send(bytes("ERROR 202: Username taken", "utf-8"))
 			return False
-		else: 
-			return True
+		 
+		return True
 
 	elif (commandName == "login"):
 		# if the client issuing the 'login' command is already logged in return error 
@@ -86,6 +105,7 @@ def checkArguments(commandName, messageArray, client):
 		if (len(messageArray) != 3):
 			client.send(bytes("ERROR 201: Incorrect number of arguments", "utf-8"))
 			return False
+
 		# check password and username errors
 		givenUsername = messageArray[1].decode('utf-8')
 		givenPassword = messageArray[2].decode('utf-8')
@@ -98,23 +118,26 @@ def checkArguments(commandName, messageArray, client):
 		elif(givenUsername in onlineList):
 			client.send(bytes("ERROR 207: user already signed in","utf-8"))
 			return False
-		else:
-			return True
+		
+		return True
 
 	elif (commandName == "logout"):
-		if (connectedSockets[client] not in addressUsername):
+		if (len(messageArray) != 1):
+			client.send(bytes("ERROR 201: Incorrect number of arguments", "utf-8"))
+			return False
+		elif (connectedSockets[client] not in addressUsername):
 			client.send(bytes("ERROR 209: not logged in", "utf-8"))
 			return False
-		else: 
-			return True
+	
+		return True
 	elif (commandName == "sendmsg"):
 		#check length
 		if (len(messageArray) < 3):
 			client.send(bytes("ERROR 201: Incorrect number of arguments", "utf-8"))
 			return False
+
 		givenUsername = messageArray[1].decode('utf-8')
 		clientAddress = connectedSockets[client]
-
 		if (clientAddress not in addressUsername):
 			client.send(bytes("ERROR 206: must be logged in to issue command", "utf-8"))
 			return False
@@ -126,24 +149,32 @@ def checkArguments(commandName, messageArray, client):
 			return False
 
 		clientUsername = addressUsername[clientAddress]
+		# check for self sent messages, we don't allow those.
 		if (givenUsername == clientUsername):
 			client.send(bytes("ERROR 212: self sent message", "utf-8"))
 			return False
+
 		return True
 	elif (commandName == "listusers"):
 		#check length 
 		if (len(messageArray) != 1):
-			client.send(bytes("ERROR 205: Incorrect number of arguments", "utf-8"))
+			client.send(bytes("ERROR 201: Incorrect number of arguments", "utf-8"))
 			return False
 
 		address = connectedSockets[client]
 		if (address not in addressUsername):
 			client.send(bytes("ERROR 206: must be online to issue command", "utf-8"))
 			return False
-		else: 
-			return True
+		
+		return True
 
 def processCommand(messageArray, client):
+	"""
+	This function handles the actual logic behind each command. It uses checkArguments
+	defined above as a helper method to accomplish this.
+
+	note: extra whitespace is ignored in the format of these messages.
+	"""
 	# command to be processed
 	command = messageArray[0].decode('utf-8')
 
@@ -209,7 +240,7 @@ def processCommand(messageArray, client):
 				"""
 				Steps:
 				1) get sender's username  2) get sending address 3) build output 
-				4) send message using the client socket associated with sending address
+				4) send message using the client socket associated with the sending address
 				
 				output = "<sent from> <msg>"
 				"""
@@ -230,6 +261,7 @@ def processCommand(messageArray, client):
 
 				#notify server
 				print("sent a message to: " + str(sendingUsername) + " from: " + str(senderUsername))
+
 				#get sending socket and send message
 				sendingSocket = getSocket(sendingAddress)
 				sendingSocket.send(bytes(output, "utf-8"))
@@ -238,6 +270,7 @@ def processCommand(messageArray, client):
 		elif (command == "listusers"):
 			properArgStructure = checkArguments("listusers", messageArray, client)
 			if (properArgStructure):
+				#build list
 				i = 0
 				userList = ""
 				while (i < len(onlineList)):
@@ -284,7 +317,7 @@ def main():
 
 				# check for forced closed connections and handle/cleanup appropriately
 				if data is False:
-					print("Closed connection from: " + str(connectedSockets[s]))
+					print("Closed connection: " + str(connectedSockets[s]))
 					inputs.remove(s)
 					address = connectedSockets[s]
 					if (address in addressUsername):
@@ -295,9 +328,17 @@ def main():
 					continue
 
 				#process the request given by the client
-				messageArray = data.split()
+				messageArray = data.split() #split data to avoid whitespace complications
 				processCommand(messageArray, s)
 
+		for s in exceptional: 
+			connectedSockets.remove(s)
+			del connectedSockets[s]
+
 if __name__ == '__main__':
+	#retrieve the stored registered users
 	usernamePassword = getRegisteredUsers()
+	#start application
 	main()
+
+
