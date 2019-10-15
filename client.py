@@ -134,8 +134,8 @@ def main():
 	threading.Thread(target=recvThread).start()
 
 	#loop to ask for input and send the data to the IM server
-	while True
-:		# get command issued to server
+	while True:		
+	    # get command issued to server
 		command_string = getInput()
 
 		# handle special cases for the command
