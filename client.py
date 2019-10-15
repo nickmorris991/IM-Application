@@ -32,44 +32,24 @@ def outputToHTMLDisplay(message):
 	f.close()
 
 def getInput():
-	command_string = input("ENTER COMMAND > ")
-
-	return command_string
-
-def loginOrRegDecision():
-	while (True):
-		command_string = input("login or register? > ")
-		if (len(command_string) > 0): 
+	while True:
+		command_string = input("ENTER COMMAND > ")
+		if (len(command_string) > 0):
 			break
 	return command_string
 
-def getUsername():
-	while(True):
-		username = input("username > ")
-		if (len(username) > 0): 
-			break
-	return username
+def outputSendMsg(messageList):
+	#build output (me to username > message) and print
+	messageIndex = 2
 
-def getPassword():
-	while(True):
-		password = input("password > ")
-		if (len(password) > 0): 
-			break
-	return password
+	outputString = "me to " + str(messageList[1]) + " > "
 
-def getLoggedInCommand():
-	while(True):
-		command = input("sendmsg, logout, or listusers? > ")
-		if (len(command) > 0): 
-			break
-	return command
+	while (messageIndex < len(messageList)):
+		outputString += messageList[messageIndex] + " "
+		messageIndex+=1
 
-def getMessage():
-	while(True):
-		message = input("enter message > ")
-		if (len(message) > 0):
-			break
-	return message
+	#output attempted message to client display
+	outputToHTMLDisplay(outputString)
 
 def recvThread():
 	while True:
@@ -82,7 +62,7 @@ def main():
 	described in the provided template files. So I went with a multi threaded
 	approach client side. It's fairly similar"""
 
-	if (path.exists(clientName)):
+	if (path.exists(clientName) and clientName != "client" and clientName != "client.py"):
 		os.remove(clientName) #if the file is already in OS, start fresh
 
 	f = open(clientName,"w+")
@@ -90,12 +70,20 @@ def main():
 	f.close()
 
 	threading.Thread(target=recvThread).start()
+
 	while True:
+		# get command
 		command_string = getInput()
+		if ("sendmsg" in command_string):
+			messageList = command_string.split()
+			outputSendMsg(messageList)
+
+		# send command
 		client.send(bytes(command_string,"utf-8"))
-	
+
 if __name__ == '__main__': 
-	clientName = input("Enter name for output display, this is not a username (e.g. client1Output.html): ")
+	clientName = input("Enter name for display file (e.g. client1Output.html), DONT USE NAME \"client\": ")
+	print()
 	print("use the console/terminal for input and the file just created to view output")
 	print("it will update in real time, no need to refresh")
 

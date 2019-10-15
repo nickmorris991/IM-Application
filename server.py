@@ -114,22 +114,22 @@ def checkArguments(commandName, messageArray, client):
 			return False
 		givenUsername = messageArray[1].decode('utf-8')
 		clientAddress = connectedSockets[client]
-		clientUsername = addressUsername[clientAddress]
 
 		if (clientAddress not in addressUsername):
 			client.send(bytes("ERROR 206: must be logged in to issue command", "utf-8"))
 			return False
-		elif (givenUsername not in usernamePassword):
+		if (givenUsername not in usernamePassword):
 			client.send(bytes("ERROR 203: Unregistered username","utf-8"))
 			return False
-		elif (givenUsername not in onlineList):
+		if (givenUsername not in onlineList):
 			client.send(bytes("ERROR 211: user isn't online", "utf-8"))
 			return False
-		elif (givenUsername == clientUsername):
+
+		clientUsername = addressUsername[clientAddress]
+		if (givenUsername == clientUsername):
 			client.send(bytes("ERROR 212: self sent message", "utf-8"))
 			return False
-		else:
-			return True
+		return True
 	elif (commandName == "listusers"):
 		#check length 
 		if (len(messageArray) != 1):
@@ -228,6 +228,7 @@ def processCommand(messageArray, client):
 				#get sending socket and send message
 				sendingSocket = getSocket(sendingAddress)
 				sendingSocket.send(bytes(output, "utf-8"))
+
 
 		elif (command == "listusers"):
 			properArgStructure = checkArguments("listusers", messageArray, client)
