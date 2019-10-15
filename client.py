@@ -2,15 +2,28 @@ import select, socket, sys, time, threading;
 import os;
 from os import path;
 
-PORT = 5001             # arbitrary non-privileged port
+PORT = 5001              # arbitrary non-privileged port
 #HOST = "164.107.113.68" # retreives host of machine this code is run on
-HOST = "127.0.0.1"
+HOST = ""                # defined by user so that we aren't hard coding server IP's (flexibility)
 clientName = None
 
 #establish socket and connection to the IP
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect((HOST, PORT))
 client.setblocking(1)
+
+def getSetupClientInfo(): 
+	#get display name for this client
+	clientName = input("Enter name for display file (e.g. client1Output.html), DONT USE NAME \"client\": ")
+	print()
+	print("use the console/terminal for input and the file just created to view output")
+	print("it will update in real time, no need to refresh")
+	print()
+
+	#get host address for this client
+	HOST = input("Enter the IP of the machine you'd like to use as the IM server: ")
+	print("All setup! Ready to send some messages! ")
+	print()
 
 def createHTMLTemplate(file):
 	file.write("<!DOCTYPE html>\n")
@@ -82,9 +95,5 @@ def main():
 		client.send(bytes(command_string,"utf-8"))
 
 if __name__ == '__main__': 
-	clientName = input("Enter name for display file (e.g. client1Output.html), DONT USE NAME \"client\": ")
-	print()
-	print("use the console/terminal for input and the file just created to view output")
-	print("it will update in real time, no need to refresh")
-
+	getSetupClientInfo()
 	main()

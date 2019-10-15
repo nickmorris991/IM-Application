@@ -241,7 +241,7 @@ def processCommand(messageArray, client):
 					i+=1
 				#respond to client
 				client.send(bytes(userList, "utf-8"))
-
+				
 def main():
 	# create tcp/ip socket
 	server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
