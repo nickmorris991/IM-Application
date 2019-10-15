@@ -126,7 +126,7 @@ def checkArguments(commandName, messageArray, client):
 			client.send(bytes("ERROR 201: Incorrect number of arguments", "utf-8"))
 			return False
 		elif (connectedSockets[client] not in addressUsername):
-			client.send(bytes("ERROR 209: not logged in", "utf-8"))
+			client.send(bytes("ERROR 206: must be logged in to issue command", "utf-8"))
 			return False
 	
 		return True

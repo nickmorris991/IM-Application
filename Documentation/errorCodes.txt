@@ -1,0 +1,10 @@
+ERROR 200: Received unaccepted command.
+ERROR 201: Incorrect number of arguments
+ERROR 202: Username taken
+ERROR 203: Unregistered username
+ERROR 204: Incorrect password
+ERROR 206: must be logged in to issue command
+ERROR 207: user already signed in
+ERROR 208: logout before logging in again
+ERROR 211: user isn't online
+ERROR 212: self sent message
