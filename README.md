@@ -37,6 +37,7 @@ starting the client:
 4) issue command "python3 client.py"
 5) you'll be prompted to enter the IP address of the predefined server. Enter whatever IP you ran the server on. 
 6) you'll now be prompted to name the .html file that will display your client output. I recommend a simple naming scheme like (c.html, c2.html, c3.html, etc for each new client you start). Make sure you include the file extension in the name, so "c.html" or "c2.html" NOT "c" or "c2".
+7) if you're running multiple clients on the same stdlinux account make sure to name their display output files differently so they don't overwrite each other. 
 
 using the application: 
 
