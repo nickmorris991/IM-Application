@@ -135,7 +135,7 @@ def main():
 
 	#loop to ask for input and send the data to the IM server
 	while True:		
-	    # get command issued to server
+	        # get command issued to server
 		command_string = getInput()
 
 		# handle special cases for the command
