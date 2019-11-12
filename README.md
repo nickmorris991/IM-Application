@@ -1,10 +1,5 @@
 IMApplication README
 
-Student: Nick Morris
-Section: TR: 8:00 - 9:20
-
-
-
 
 
 HOW TO RUN MY PROJECT: 
@@ -54,7 +49,7 @@ VALID COMMANDS (PROTOCOL):
 note: I defined things so that whitespace doesn't matter to the user. so "logout" and "logout   " are the same command. 
 note: I define "logged in" and "online" to mean the same thing. This made logical sense to me because if you think about a normal messaging application a user isn't listed as "active" or "online" unless they are also "logged in".
 
-per the document "charts on requirements" on Carmen. Valid commands are as follows:
+Valid commands are as follows:
 
 1) register <username> <password> (e.g. ENTER COMMAND > register dave ogle)
 -You can be logged in or logged out for this command. It made logical sense to me to be able to register a new user in either state. 
