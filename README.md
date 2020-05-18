@@ -32,11 +32,11 @@ note: I defined things so that whitespace doesn't matter to the user. so "logout
 
 Valid commands are as follows:
 
-1) register <username> <password> (e.g. ENTER COMMAND > register dave ogle)
+1) register username password (e.g. ENTER COMMAND > register admin password)
 -You can be logged in or logged out for this command.
 -You must provde these three arguments separated by at least one space each. 
 
-2) login <username> <password> (e.g. ENTER COMMAND > login dave ogle)
+2) login username password (e.g. ENTER COMMAND > login admin password)
 -You must be logged out to issue this command.
 -You must provide these three arguments separated by at least one space each. 
 -You must issue a valid and registered username
@@ -46,7 +46,7 @@ Valid commands are as follows:
 3) listusers (e.g. ENTER COMMAND > listusers)
 -This command lists all active users. You must be logged in to issue this command.
 
-4) sendmsg <username> <message> (e.g. ENTER COMMAND > sendmsg userA test message.)
+4) sendmsg username message (e.g. ENTER COMMAND > sendmsg userA test message.)
 -You must provide AT LEAST these three arguments separated by at least one space each. 
 -You must be logged in to issue this command. Note that I define "online" and "logged in" the same.
 -You must provide a registered username

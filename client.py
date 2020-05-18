@@ -1,12 +1,10 @@
-import select, socket, sys, time, threading;
-import os;
-from os import path;
+import select, socket, sys, time, threading
+import os
+from os import path
 
-#get the name for the client output display
-clientName = ""
+clientName = "" #get the name for the client output display
 
-#used to send message length for variable recv
-BUFFERSIZE = 10
+BUFFERSIZE = 10 #used to send message length for variable recv
 
 #define port and host for connection
 PORT = 5001
@@ -64,8 +62,6 @@ def outputToHTMLDisplay(message):
 def getInput():
 	"""
 	used to prompt the client for an input command.
-	to see how these commands are defined please see the
-	documentation folder in the project. 
 	"""
 	while True:
 		command_string = input("ENTER COMMAND > ")
@@ -74,13 +70,8 @@ def getInput():
 	return command_string
 
 def getBuffer():
-	"""used to create a buffer string fro the message protocal"""
-	i = 0
-	buff = ""
-	while (i < BUFFERSIZE): 
-		buff = buff + " "
-		i+=1
-	return buff
+	"""used to create a buffer string for the message protocal"""
+	return ' ' * BUFFERSIZE
 
 def outputSendMsg(messageList):
 	"""
@@ -105,8 +96,8 @@ def recvThread():
 	while True:
 		try:
 			"""
-			#receive data in chunks of maximum 1024. If we receive an especially long message
-			#it will just print on mulitple output lines. This seems acceptable to me.  
+			receive data in chunks of maximum 1024. If we receive an especially long message
+			it will just print on mulitple output lines. This seems acceptable to me.  
 			"""
 			data = client.recv(1024)
 			if not data: sys.exit(0)
@@ -116,12 +107,6 @@ def recvThread():
 			sys.exit(0)
 
 def main():
-	"""
-	the approach I used server side didn't work with stdinput like it's
-	described in the provided template files. So I went with a multi threaded
-	approach client side. It's logically fairly similar
-	"""
-
 	#open and create a display for the client
 	if (path.exists(clientName) and clientName != "client" and clientName != "client.py"):
 		os.remove(clientName) #if the file is already in OS, start fresh
@@ -158,6 +143,3 @@ def main():
 if __name__ == '__main__': 
 	clientName = getSetupClientInfo()
 	main()
-
-
-

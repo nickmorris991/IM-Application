@@ -1,4 +1,4 @@
-import socket, select, sys;
+import socket, select, sys
 
 BUFFERSIZE = 5         # used to receive length of each message and scale recv buffer size based on message length
 
@@ -331,8 +331,7 @@ def main():
 				messageArray = data.split() #split data to avoid whitespace complications
 				processCommand(messageArray, s)
 
-		for s in exceptional: 
-			connectedSockets.remove(s)
+		for s in exceptional:
 			del connectedSockets[s]
 
 if __name__ == '__main__':
@@ -340,5 +339,3 @@ if __name__ == '__main__':
 	usernamePassword = getRegisteredUsers()
 	#start application
 	main()
-
-
